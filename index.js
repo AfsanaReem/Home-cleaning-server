@@ -15,12 +15,35 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         const serviceCollection = client.db("homeCleaningDb").collection("services");
+        const reviewCollection = client.db('homeCleaningDb').collection('reviews');
 
         app.get('/services', async (req, res) => {
             const query = {};
             const cursor = serviceCollection.find(query);
             const services = await cursor.toArray();
             res.send(services);
+        });
+
+
+        app.get('/reviews', async (req, res) => {
+            let query = {};
+            if (req.query.email) {
+                query = {
+                    email: req.query.email
+                }
+            }
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
+        });
+
+        app.get('/servicereviews', async (req, res) => {
+            const query = {
+                service_id: req.query.service_id
+            }
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews);
         });
 
         app.get('/services/:id', async (req, res) => {
@@ -33,6 +56,19 @@ async function run() {
         app.post('/services', async (req, res) => {
             const newService = req.body;
             const result = await serviceCollection.insertOne(newService);
+            res.send(result);
+        })
+
+        app.post('/reviews', async (req, res) => {
+            const newReview = req.body;
+            const result = await reviewCollection.insertOne(newReview);
+            res.send(result);
+        })
+
+        app.delete('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await reviewCollection.deleteOne(query);
             res.send(result);
         })
 
